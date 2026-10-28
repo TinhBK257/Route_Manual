@@ -1,0 +1,177 @@
+/**
+ * VNA Route Manual v4.0 - Print Stylesheet
+ * Optimized for A4 printing of Chapter 3 Routes & Chapter 4 Airports
+ */
+
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
+
+@media print {
+  /* Hide application chrome */
+  header.app-topbar,
+  nav.nav-bar-wrapper,
+  nav.nav-tabs-bar,
+  aside.sidebar-panel,
+  .quick-jump-toc-bar,
+  .sticky-entity-header .header-action-buttons,
+  .modal-backdrop,
+  .slide-over-drawer,
+  .drawer-backdrop,
+  .toast-container,
+  .airport-hover-popover,
+  .btn,
+  .ch3-view-mode-bar .mode-toggle-group,
+  .airport-attachments-summary {
+    display: none !important;
+  }
+
+  /* Reset layout constraints for full page print */
+  html, body {
+    background: #FFFFFF !important;
+    color: #0D0D0D !important;
+    font-size: 11pt !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-workspace {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .main-content-panel {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    background: #FFFFFF !important;
+  }
+
+  .doc-page-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 12px !important;
+  }
+
+  /* Paper card resets for print */
+  .paper-card,
+  .ch4-table-card,
+  .ch3-table-wrapper {
+    box-shadow: none !important;
+    border: 1px solid #404040 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin-bottom: 16px !important;
+    background: #FFFFFF !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Sticky entity header becomes clean static document header */
+  .sticky-entity-header {
+    position: static !important;
+    box-shadow: none !important;
+    border-bottom: 2px solid #006885 !important;
+    padding: 8px 0 12px 0 !important;
+    margin-bottom: 14px !important;
+  }
+
+  /* Print Header with VNA Attribution */
+  .print-only-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #DADBDF;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+
+  .print-only-header .print-brand {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #006885;
+  }
+
+  .print-only-header .print-meta {
+    font-size: 9pt;
+    color: #6E6E6E;
+    text-align: right;
+  }
+
+  /* Force exact Word table shading on paper */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  table.ch3-word-table,
+  table.ch4-word-table,
+  table.ch3-region-banner-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  table.ch3-word-table th,
+  table.ch3-word-table td,
+  table.ch4-word-table th,
+  table.ch4-word-table td {
+    border: 1px solid #404040 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    padding: 5px 8px !important;
+    font-size: 9.5pt !important;
+    line-height: 1.35 !important;
+  }
+
+  /* Word shading preservation */
+  .ch4-yellow-header,
+  td.ch4-yellow-header,
+  th.ch4-yellow-header {
+    background-color: #FFE599 !important;
+    color: #0D0D0D !important;
+  }
+
+  .ch4-green-adq,
+  td.ch4-green-adq {
+    background-color: #70AD47 !important;
+    color: #FFFFFF !important;
+    font-weight: bold !important;
+  }
+
+  .ch4-gray-subhead,
+  td.ch4-gray-subhead,
+  th.ch4-gray-subhead {
+    background-color: #E7E6E6 !important;
+    color: #0D0D0D !important;
+  }
+
+  tr.ch3-row-title td {
+    background-color: #262626 !important;
+    color: #FFFFFF !important;
+  }
+
+  /* Links render as clean text */
+  .airport-chip-link {
+    display: inline !important;
+    background: transparent !important;
+    border: none !important;
+    color: #0D0D0D !important;
+    padding: 0 !important;
+    text-decoration: none !important;
+    font-weight: 700 !important;
+  }
+}
+
+/* Screen state for print header */
+.print-only-header {
+  display: none;
+}

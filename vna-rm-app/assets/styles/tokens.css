@@ -1,0 +1,126 @@
+/**
+ * VNA Route Manual v4.0 - Official Design Tokens
+ * Sampled directly from Vietnam Airlines UI Styleguide (Styleguide.pdf p.4)
+ * Light Theme Only + 100% Word Document Fidelity
+ */
+
+:root {
+  /* Primary — VNA Teal */
+  --vna-primary: #006885;
+  --vna-primary-d1: #005B7A;
+  --vna-primary-d2: #004F70;
+  --vna-primary-d3: #004265;
+  --vna-primary-l1: #3189A1;
+  --vna-primary-l2: #61A8BC;
+  --vna-primary-l3: #92C7D9;
+  --vna-primary-l4: #DCF0F7;
+  --vna-primary-l5: #F1F9FC;
+
+  /* Secondary — VNA Gold */
+  --vna-gold: #DCB033;
+  --vna-gold-d1: #C79C11;
+  --vna-gold-d2: #B99523;
+  --vna-gold-d3: #976D01;
+  --vna-gold-l1: #E3C05C;
+  --vna-gold-l2: #EAD083;
+  --vna-gold-l3: #F0DFAB;
+  --vna-gold-l4: #F8EED3;
+  --vna-gold-l5: #FEFBEC;
+
+  /* Text Colors */
+  --text-primary: #0D0D0D;
+  --text-secondary: #6E6E6E;
+  --text-tertiary: #A8AFB7;
+  --text-link: #006885;
+  --text-inverse: #FFFFFF;
+
+  /* Stroke / Border Colors */
+  --stroke-1: #DADBDF;
+  --stroke-2: #BDBFCC;
+  --stroke-3: #B0B9C2;
+
+  /* Dark Scale */
+  --dark-1: #0E1822;
+  --dark-2: #18252D;
+  --dark-3: #384152;
+  --dark-4: #4C5564;
+  --dark-5: #6B7380;
+  --dark-6: #9CA2AE;
+  --dark-7: #D1D4DB;
+  --dark-8: #E6E7EB;
+
+  /* Gray Scale (Backgrounds & Surfaces) */
+  --gray-1: #F9FAFC;
+  --gray-2: #F3F4F6;
+  --gray-3: #E6E7EB;
+  --gray-4: #DEE1E6;
+  --gray-5: #CFD4DA;
+
+  /* Semantic Status Colors */
+  --danger: #F95252;
+  --danger-bg: #FFDDDD;
+  --success: #22A55B;
+  --success-bg: #E6F6EC;
+  --warning: #F59E0B;
+  --warning-bg: #FEF3C7;
+  --info: #0EA5E9;
+  --info-bg: #E0F2FE;
+
+  /* Flight Ops Role Colors (for airport code annotations) */
+  --role-dep: #006885;
+  --role-arr: #004265;
+  --role-dest-alt: #976D01;
+  --role-enr-alt: #4C5564;
+  --role-general: #006885;
+
+  /* Airport Category Accents */
+  --cat-a: #22A55B;
+  --cat-b: #F59E0B;
+  --cat-c: #F95252;
+
+  /* Word Document Exact Colors (DO NOT MODIFY) */
+  --word-yellow: #FFE599;
+  --word-green-adq: #70AD47;
+  --word-gray: #E7E6E6;
+  --word-banner: #262626;
+  --word-border: #404040;
+  --word-text: #0D0D0D;
+
+  /* Spacing Scale (4pt/8pt baseline) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-1: 0 1px 2px rgba(14, 24, 34, 0.06), 0 1px 3px rgba(14, 24, 34, 0.08);
+  --shadow-2: 0 4px 12px rgba(14, 24, 34, 0.10);
+  --shadow-3: 0 12px 32px rgba(14, 24, 34, 0.16);
+  --shadow-drawer: -6px 0 32px rgba(14, 24, 34, 0.16);
+  --focus-ring: 0 0 0 3px rgba(0, 104, 133, 0.25);
+
+  /* Typography */
+  --font-sans: 'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+
+  /* Dimensions */
+  --topbar-height: 64px;
+  --navbar-height: 48px;
+  --sidebar-width: 360px;
+  --drawer-width: min(880px, 62vw);
+
+  /* Transitions */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}

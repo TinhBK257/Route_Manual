@@ -1,0 +1,567 @@
+/**
+ * VNA Route Manual v4.0 - Document Faithful Tables Stylesheet
+ * 100% faithful replication of Word layout for Chapter 3 (Routes) and Chapter 4 (Airports)
+ * Light Theme Application Chrome + Word Exact Document Fidelity (#FFE599, #70AD47, #E7E6E6, #262626)
+ */
+
+/* ==========================================================================
+   1. DOCUMENT PAGE CONTAINER & PAPER CARD
+   ========================================================================== */
+.doc-page-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.paper-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--stroke-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: 24px;
+}
+
+/* ==========================================================================
+   2. STICKY ENTITY HEADER & QUICK-JUMP TOC BAR
+   ========================================================================== */
+.sticky-entity-header {
+  position: sticky;
+  top: -18px; /* Offset parent container padding */
+  z-index: 30;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid var(--stroke-1);
+  padding: 12px 20px;
+  margin: -18px -26px 16px -26px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(14, 24, 34, 0.05);
+  flex-shrink: 0;
+}
+
+.entity-identity-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.entity-code-badge {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--vna-primary);
+  line-height: 28px;
+}
+
+.entity-title-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.entity-main-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entity-sub-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 16px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.header-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+}
+
+/* Fleet strip in Ch4 Sticky Header */
+.fleet-strip {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.fleet-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  background: var(--gray-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--stroke-1);
+}
+
+.fleet-pill.is-adq {
+  background: var(--word-green-adq);
+  color: #FFFFFF;
+  border-color: #5a8a38;
+}
+
+/* Sticky Quick-jump TOC Bar */
+.quick-jump-toc-bar {
+  position: sticky;
+  top: calc(var(--sticky-header-height, 95px) - 18px); /* Sticks directly below entity header without overlap */
+  z-index: 25;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid var(--stroke-1);
+  padding: 8px 20px;
+  margin: -16px -26px 18px -26px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  box-shadow: 0 2px 4px rgba(14, 24, 34, 0.03);
+  flex-shrink: 0;
+}
+
+.toc-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background-color: var(--gray-1);
+  border: 1px solid var(--stroke-1);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.toc-pill:hover {
+  background-color: var(--gray-2);
+  border-color: var(--stroke-2);
+  color: var(--vna-primary);
+}
+
+.toc-pill.active {
+  background-color: var(--vna-primary-l4);
+  border-color: var(--vna-primary);
+  color: var(--vna-primary-d2);
+  font-weight: 700;
+}
+
+.toc-pill svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ==========================================================================
+   3. AIRPORT CODE LINKS INSIDE WORD TABLES
+   ========================================================================== */
+.airport-chip-link {
+  display: inline-flex;
+  align-items: baseline;
+  padding: 0 2px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vna-primary);
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px dotted var(--vna-primary);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  vertical-align: baseline;
+  line-height: inherit;
+}
+
+.airport-chip-link:hover {
+  background-color: var(--vna-primary-l5);
+  border-bottom-style: solid;
+  color: var(--vna-primary-d2);
+  border-radius: 2px;
+}
+
+.airport-chip-link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 2px;
+}
+
+/* Specific Role Underlines */
+.airport-chip-link.chip-dep {
+  border-bottom-color: var(--role-dep);
+  color: var(--role-dep);
+}
+.airport-chip-link.chip-arr {
+  border-bottom-color: var(--role-arr);
+  color: var(--role-arr);
+}
+.airport-chip-link.chip-dest-alt {
+  border-bottom-color: var(--role-dest-alt);
+  color: var(--role-dest-alt);
+}
+.airport-chip-link.chip-enr-alt {
+  border-bottom-color: var(--role-enr-alt);
+  color: var(--role-enr-alt);
+}
+
+.alt-chip-item {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.alt-sep {
+  color: var(--text-primary);
+  margin-right: 4px;
+}
+
+/* Role Legend Bar in Chapter 3 */
+.ch3-role-legend-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: 6px 12px;
+  background-color: var(--gray-1);
+  border: 1px solid var(--stroke-1);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.role-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.role-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   4. CHAPTER 3 ROUTE TABLES (100% WORD FIDELITY)
+   ========================================================================== */
+.ch3-table-wrapper {
+  background: #FFFFFF;
+  border: 1px solid var(--word-border);
+  overflow: hidden;
+  margin-bottom: 24px;
+  scroll-margin-top: 110px;
+}
+
+.ch3-table-wrapper.highlight-flash {
+  animation: routeHighlightFlash 2.5s ease-out;
+}
+
+@keyframes routeHighlightFlash {
+  0% { box-shadow: 0 0 0 3px var(--vna-primary), 0 0 20px var(--vna-primary-l3); }
+  100% { box-shadow: none; }
+}
+
+table.ch3-region-banner-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  background-color: var(--gray-2);
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--word-border);
+  table-layout: fixed;
+}
+
+table.ch3-region-banner-table th {
+  padding: 8px 10px;
+  border: 1px solid var(--word-border);
+  letter-spacing: 0.2px;
+}
+
+table.ch3-word-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: var(--word-text);
+  table-layout: fixed;
+  background-color: #FFFFFF;
+}
+
+table.ch3-word-table th,
+table.ch3-word-table td {
+  border: 1px solid var(--word-border);
+  padding: 7px 10px;
+  vertical-align: middle;
+  line-height: 1.45;
+  word-wrap: break-word;
+}
+
+/* Proportions matching Word */
+table.ch3-word-table col.col-no { width: 22.4%; min-width: 175px; }
+table.ch3-word-table col.col-dep { width: 11.2%; min-width: 70px; }
+table.ch3-word-table col.col-arr { width: 11.2%; min-width: 70px; }
+table.ch3-word-table col.col-route { width: 22.4%; min-width: 140px; }
+table.ch3-word-table col.col-alt { width: 32.8%; min-width: 190px; }
+
+/* Chapter 3 Header Row */
+table.ch3-word-table thead tr.ch3-row-header th {
+  background-color: var(--gray-2);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  padding: 8px 10px;
+  border: 1px solid var(--word-border);
+}
+
+/* Route Dark Title Banner (#262626) */
+tr.ch3-row-title td {
+  background-color: var(--word-banner) !important;
+  color: #FFFFFF !important;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 9px 12px;
+  letter-spacing: 0.3px;
+  border: 1px solid #404040;
+}
+
+tr.ch3-row-title .airport-chip-link {
+  display: inline;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1.5px dotted #FFFFFF !important;
+  color: #FFFFFF !important;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+tr.ch3-row-title .airport-chip-link:hover {
+  border-bottom-style: solid !important;
+  color: var(--vna-gold-l3) !important;
+  background: transparent !important;
+}
+
+/* Leg Rows */
+tr.ch3-row-leg td {
+  background-color: #FFFFFF;
+}
+
+tr.ch3-row-leg td.cell-no {
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background-color: var(--gray-1);
+}
+
+tr.ch3-row-leg td.cell-dep,
+tr.ch3-row-leg td.cell-arr {
+  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: center;
+}
+
+tr.ch3-row-leg td.cell-route {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--vna-primary-d2);
+  font-weight: 600;
+  text-align: center;
+}
+
+tr.ch3-row-leg td.cell-dest-alt {
+  font-size: 12.5px;
+  text-align: left;
+}
+
+/* Metadata Rows */
+tr.ch3-row-meta td.meta-label {
+  width: 22.4%;
+  font-weight: 700;
+  color: var(--text-primary);
+  background-color: var(--gray-2);
+  font-size: 12px;
+}
+
+tr.ch3-row-meta td.meta-value {
+  width: 77.6%;
+  background-color: #FFFFFF;
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+
+/* EDTO Checkbox */
+.edto-checkbox-tick {
+  color: var(--text-primary);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.edto-checkbox-untick {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   5. CHAPTER 4 AIRPORT TABLES (100% WORD FIDELITY)
+   ========================================================================== */
+.ch4-table-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--stroke-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+table.ch4-word-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: var(--word-text);
+  background-color: #FFFFFF;
+}
+
+table.ch4-word-table th,
+table.ch4-word-table td {
+  border: 1px solid var(--word-border);
+  padding: 7px 10px;
+  vertical-align: middle;
+  line-height: 1.45;
+  word-wrap: break-word;
+  background-color: #FFFFFF;
+}
+
+/* Section Anchor offsets */
+tr[id^="sec-"] {
+  scroll-margin-top: 110px;
+}
+
+/* Word Shading #FFE599 (Section Headers) */
+.ch4-yellow-header,
+td.ch4-yellow-header,
+th.ch4-yellow-header {
+  background-color: var(--word-yellow) !important;
+  color: #0D0D0D !important;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.2px;
+  border-color: #C8B065 !important;
+}
+
+/* Green Fleet ADQ Cell #70AD47 */
+.ch4-green-adq,
+td.ch4-green-adq {
+  background-color: var(--word-green-adq) !important;
+  color: #FFFFFF !important;
+  font-weight: 800;
+  text-align: center;
+  border-color: #4C772F !important;
+}
+
+/* Gray Runway Subheader #E7E6E6 */
+.ch4-gray-subhead,
+td.ch4-gray-subhead,
+th.ch4-gray-subhead {
+  background-color: var(--word-gray) !important;
+  color: #0D0D0D !important;
+  font-weight: 700;
+  font-size: 12px;
+  text-align: center;
+  border-color: #B5B5B5 !important;
+}
+
+/* Section 4/5/6/9/10 helpers */
+td.ch4-label {
+  font-weight: 700;
+  color: var(--text-primary);
+  background-color: var(--gray-2) !important;
+  width: 160px;
+}
+
+tr.ch4-rwy-row td {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+tr.ch4-rwy-row td:first-child {
+  font-weight: 700;
+  color: var(--vna-primary);
+}
+
+.ch4-note-content {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  white-space: pre-line;
+}
+
+/* Embedded Diagram / Image Hyperlink Button */
+.image-hyperlink-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--vna-primary-l5);
+  border: 1px solid var(--vna-primary-l3);
+  color: var(--vna-primary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  margin: 3px 2px;
+}
+
+.image-hyperlink-pill:hover {
+  background-color: var(--vna-primary-l4);
+  border-color: var(--vna-primary);
+  color: var(--vna-primary-d1);
+}
+
+.image-hyperlink-pill svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.airport-attachments-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 10px 16px;
+  background-color: var(--vna-primary-l5);
+  border: 1px solid var(--vna-primary-l4);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--vna-primary-d2);
+  font-weight: 600;
+  margin-bottom: 16px;
+  scroll-margin-top: 110px;
+}
+
+.airport-attachments-summary svg {
+  width: 16px;
+  height: 16px;
+  color: var(--vna-primary);
+}

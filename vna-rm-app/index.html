@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vietnam Airlines - Route Manual Interactive Lookup System v4.0</title>
+  
+  <!-- JSZip via CDN for client-side .docx / OOXML unzipping -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  
+  <!-- Typography: Open Sans (VNA Styleguide Standard) & JetBrains Mono for Aviation Codes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Modular Stylesheets per VNA UI Styleguide -->
+  <link rel="stylesheet" href="assets/styles/tokens.css">
+  <link rel="stylesheet" href="assets/styles/components.css">
+  <link rel="stylesheet" href="assets/styles/layout.css">
+  <link rel="stylesheet" href="assets/styles/document-tables.css">
+  <link rel="stylesheet" href="assets/styles/print.css">
+</head>
+<body>
+
+  <!-- TOPBAR HEADER (64px) -->
+  <header class="app-topbar">
+    <div class="brand-wrapper">
+      <a href="#/" style="display:flex; align-items:center; text-decoration:none;" title="Vietnam Airlines">
+        <img src="assets/brand/vna-logo.png" alt="Vietnam Airlines" class="brand-logo-img">
+      </a>
+
+      <div class="brand-divider"></div>
+
+      <div class="app-title-group">
+        <h1>
+          <span>ROUTE MANUAL LOOKUP</span>
+          <span class="version-badge">v4.0</span>
+        </h1>
+        <p>Chương 3 NEW AMD · Chương 4 REV04 (176 Chặng · 278 Sân bay)</p>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <div class="idb-status-pill" id="idbStatusPill">
+        <span class="status-pulse-dot"></span>
+        <span id="idbStatusText">Đang kiểm tra bộ đệm...</span>
+      </div>
+
+      <button type="button" class="btn btn-outline btn-sm" onclick="window.vnaApp.clearCache()" title="Xóa bộ đệm IndexedDB và quay về dữ liệu mặc định">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        <span>Xóa bộ đệm</span>
+      </button>
+
+      <button type="button" class="btn btn-primary btn-sm" onclick="window.vnaApp.openUploadModal()" title="Nạp file Word DOCX Chương 3 & Chương 4">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        <span>Nạp file Word (.docx)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- NAVIGATION BAR & BREADCRUMBS (48px) -->
+  <nav class="nav-bar-wrapper">
+    <div class="nav-left-group">
+      <!-- Back / Forward Buttons -->
+      <div class="history-nav-controls">
+        <button type="button" class="history-nav-btn" onclick="window.vnaApp.historyBack()" title="Quay lại (Alt+Left)">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button type="button" class="history-nav-btn" onclick="window.vnaApp.historyForward()" title="Tiến tới (Alt+Right)">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <!-- Breadcrumbs -->
+      <div class="breadcrumb-trail" id="breadcrumbContainer">
+        <span class="crumb-item active">Chương 3: Bảng Đường Bay</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="btn-group">
+      <button type="button" class="btn-group-item active nav-tab" data-tab="routes" onclick="window.vnaApp.switchTab('routes')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        <span>Chương 3 (Routes)</span>
+        <span class="badge badge-soft-primary" id="tabRoutesCount" style="padding:1px 5px; font-size:11px;">0</span>
+      </button>
+
+      <button type="button" class="btn-group-item nav-tab" data-tab="airports" onclick="window.vnaApp.switchTab('airports')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        <span>Chương 4 (Airports)</span>
+        <span class="badge badge-soft-primary" id="tabAirportsCount" style="padding:1px 5px; font-size:11px;">0</span>
+      </button>
+
+      <button type="button" class="btn-group-item nav-tab" data-tab="ops" onclick="window.vnaApp.switchTab('ops')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>Tài Liệu Bổ Sung</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- SPLIT-PANE APP CONTAINER (CSS GRID, 100% HEIGHT) -->
+  <div class="app-workspace">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-panel" id="sidebarNavContainer">
+      <!-- Search & Filters Header -->
+      <div class="search-section">
+        <div class="search-input-box">
+          <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" class="search-input" id="mainSearchInput" placeholder="Tìm kiếm ICAO, IATA, tên chặng, khu vực..." autocomplete="off" spellcheck="false">
+          <span class="search-shortcut-hint">/</span>
+          <button type="button" class="search-clear-btn" id="searchClearBtn" title="Xóa tìm kiếm">&times;</button>
+        </div>
+
+        <!-- Multi-select Filter Chips Row -->
+        <div class="filter-chips-container" id="filterChipsContainer"></div>
+      </div>
+
+      <!-- Scope Tabs (Tất cả / Gần đây / Yêu thích) -->
+      <div class="scope-tabs-bar">
+        <div class="btn-group" style="width:100%;">
+          <button type="button" class="btn-group-item active scope-tab-btn" data-scope="all" onclick="window.vnaApp.setScope('all')" style="flex:1; justify-content:center;">
+            <span>Tất cả</span>
+          </button>
+          <button type="button" class="btn-group-item scope-tab-btn" data-scope="recents" onclick="window.vnaApp.setScope('recents')" style="flex:1; justify-content:center;">
+            <span>Gần đây</span>
+            <span class="badge badge-soft-gray" id="scopeRecentsCount" style="padding:1px 5px; font-size:10px;">0</span>
+          </button>
+          <button type="button" class="btn-group-item scope-tab-btn" data-scope="favorites" onclick="window.vnaApp.setScope('favorites')" style="flex:1; justify-content:center;">
+            <span>Yêu thích</span>
+            <span class="badge badge-soft-gold" id="scopeFavCount" style="padding:1px 5px; font-size:10px;">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- List Meta Info Bar -->
+      <div class="sidebar-meta-bar">
+        <span id="listCounterText">Đang tải danh sách...</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="sortToggleBtn" style="padding:2px 6px; font-size:11px;">Sắp xếp: A-Z ▴</button>
+      </div>
+
+      <!-- Scrollable List of Cards -->
+      <div class="items-list-container" id="itemsListContainer"></div>
+    </aside>
+
+    <!-- RIGHT MAIN CONTENT PANEL -->
+    <main class="main-content-panel" id="mainContentPanel">
+      <div style="padding:40px; text-align:center; color:var(--text-secondary);">
+        Đang khởi tạo hệ thống tra cứu Route Manual...
+      </div>
+    </main>
+
+  </div>
+
+  <!-- UPLOAD / INGESTION MODAL -->
+  <div class="modal-backdrop" id="uploadModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--vna-primary);"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          Nạp Tài Liệu Route Manual Word (.docx)
+        </h3>
+        <button type="button" class="btn btn-ghost btn-icon-only" onclick="window.vnaApp.closeUploadModal()" style="font-size:20px;">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p style="font-size:13px; color:var(--text-secondary); line-height:1.6;">
+          Hệ thống sẽ giải nén trực tiếp cấu trúc XML của file Word trên trình duyệt (client-side), trích xuất toàn bộ mạng đường bay Chương 3 (7 khu vực) và 278 sân bay Chương 4 (328 sơ đồ) vào <strong>IndexedDB</strong> an toàn nội bộ mà không gửi dữ liệu ra bên ngoài.
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <label style="font-size:12px; font-weight:700; color:var(--text-primary); display:block; margin-bottom:6px;">
+              1. File Chương 3 (Routes & City Pairs) — CHAPTER 3_NEW_AMD.docx (~3.89 MB)
+            </label>
+            <input type="file" id="fileCh3Input" accept=".docx" class="input input-sm">
+          </div>
+
+          <div>
+            <label style="font-size:12px; font-weight:700; color:var(--text-primary); display:block; margin-bottom:6px;">
+              2. File Chương 4 (Airports Directory & Charts) — CHAPTER 4_REV04.docx (~40.22 MB)
+            </label>
+            <input type="file" id="fileCh4Input" accept=".docx" class="input input-sm">
+          </div>
+
+          <div class="card" id="fileDropZone" style="border:2px dashed var(--stroke-2); text-align:center; padding:24px; cursor:pointer; background-color:var(--gray-1);" ondragover="event.preventDefault(); this.style.borderColor='var(--vna-primary)'; this.style.backgroundColor='var(--vna-primary-l5)';" ondragleave="this.style.borderColor='var(--stroke-2)'; this.style.backgroundColor='var(--gray-1)';" ondrop="window.vnaApp.handleDrop(event)">
+            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:var(--vna-primary); margin:0 auto 8px auto; display:block;"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            <div style="font-size:14px; font-weight:600; color:var(--text-primary);">Kéo & Thả 2 file .docx vào đây</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Tự động nhận diện CHAPTER 3 & CHAPTER 4</div>
+          </div>
+        </div>
+
+        <div class="progress-track" id="parseProgressContainer" style="display:none; margin-top:8px;">
+          <div class="progress-fill" id="parseProgressBar"></div>
+        </div>
+        <div id="parseStatusLog" style="font-size:12px; color:var(--text-secondary); min-height:18px;"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="window.vnaApp.closeUploadModal()">Hủy bỏ</button>
+        <button type="button" class="btn btn-primary" onclick="window.vnaApp.startParseFiles()">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Bắt Đầu Phân Tích</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast-container">
+    <div class="toast" id="appToast">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+      <span id="toastMsg">Thực hiện thành công!</span>
+    </div>
+  </div>
+
+  <!-- DUAL-MODE SCRIPT LOADER (INSTANT STANDALONE ON FILE://, CLEAN ES MODULES ON HTTP) -->
+  <script>
+    if (window.location.protocol === 'file:') {
+      document.write('<script src="assets/vna-rm-bundle.js"><\/script>');
+    } else {
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = 'src/main.js';
+      document.head.appendChild(script);
+    }
+  </script>
+</body>
+</html>
