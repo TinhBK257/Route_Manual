@@ -451,8 +451,10 @@ table.ch4-word-table td {
 }
 
 /* Section Anchor offsets */
-tr[id^="sec-"] {
-  scroll-margin-top: 110px;
+tr[id^="sec-"],
+td[id^="sec-"],
+div[id^="sec-"] {
+  scroll-margin-top: 120px;
 }
 
 /* Word Shading #FFE599 (Section Headers) */
@@ -564,4 +566,45 @@ tr.ch4-rwy-row td:first-child {
   width: 16px;
   height: 16px;
   color: var(--vna-primary);
+}
+
+/* Standalone Safety Notes & Auxiliary Tables */
+.ch4-notes-card {
+  margin-top: 18px;
+  background-color: var(--gray-1);
+  border: 1px solid var(--stroke-1);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  scroll-margin-top: 120px;
+}
+
+.ch4-note-item {
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.ch4-note-item:last-child {
+  margin-bottom: 0;
+}
+
+.ch4-note-alert {
+  background-color: rgba(239, 68, 68, 0.08);
+  border-left: 4px solid var(--danger);
+  padding: 10px 14px;
+  border-radius: 4px;
+  color: var(--danger);
+  font-weight: 600;
+  margin-bottom: 10px;
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.ch4-aux-table-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--vna-primary);
+  margin-top: 18px;
+  margin-bottom: 8px;
 }

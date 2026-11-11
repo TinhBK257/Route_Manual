@@ -12,7 +12,8 @@ import {
   getElementsByLocalName,
   getChildByLocalName,
   getAttrVal,
-  parseRelationships
+  parseRelationships,
+  isRowDeleted
 } from './ooxmlUtils.js';
 
 /**
@@ -105,6 +106,7 @@ export function parseChapter4Xml(docXml, relsXmlStr = '') {
           remark: '',
           // Table ASTs and attached diagrams
           tables: [],
+          notes: [],
           images: [],
           hasImages: false
         };
@@ -140,13 +142,25 @@ export function parseChapter4Xml(docXml, relsXmlStr = '') {
       const pImages = extractImagesFromNode(child, relMap, currentAirport ? currentAirport.icao : 'SUPP');
       if (pImages.length > 0) {
         if (currentAirport) {
-          currentAirport.images.push(...pImages);
-          currentAirport.hasImages = true;
-          totalImagesCount += pImages.length;
+          for (const img of pImages) {
+            if (!currentAirport.images.some(existing => existing.rId === img.rId || (img.mediaPath && existing.mediaPath === img.mediaPath))) {
+              currentAirport.images.push(img);
+              totalImagesCount++;
+            }
+          }
+          currentAirport.hasImages = currentAirport.images.length > 0;
         } else if (currentSuppSection) {
           currentSuppSection.images = currentSuppSection.images || [];
           currentSuppSection.images.push(...pImages);
         }
+      }
+
+      // Preserve standalone notes/paragraphs inside airport (e.g. VVDB EOSID procedure, EGLL Noise Monitoring notes, ZBTJ/ZGHA notes)
+      if (currentAirport && (pText.length > 0 || pImages.length > 0)) {
+        currentAirport.notes.push({
+          text: pText,
+          images: pImages
+        });
       }
 
       continue;
@@ -157,18 +171,22 @@ export function parseChapter4Xml(docXml, relsXmlStr = '') {
       const parsedTable = parseTableAST(child, relMap, currentAirport ? currentAirport.icao : 'SUPP');
 
       // CRITICAL EDGE CASE #3: Skip Tracked Deletion Ghost Tables
-      // If table has 0 non-empty text cells, it's a deleted tracked table
+      // If table has 0 non-empty text cells or rows, it's a deleted tracked table
       if (!parsedTable || parsedTable.isEmpty) {
         continue;
       }
 
       if (currentAirport) {
         currentAirport.tables.push(parsedTable);
-        // Link any images in table to airport
+        // Link any images in table to airport, deduplicated
         if (parsedTable.images.length > 0) {
-          currentAirport.images.push(...parsedTable.images);
-          currentAirport.hasImages = true;
-          totalImagesCount += parsedTable.images.length;
+          for (const img of parsedTable.images) {
+            if (!currentAirport.images.some(existing => existing.rId === img.rId || (img.mediaPath && existing.mediaPath === img.mediaPath))) {
+              currentAirport.images.push(img);
+              totalImagesCount++;
+            }
+          }
+          currentAirport.hasImages = currentAirport.images.length > 0;
         }
         // Extract structured items from table rows
         extractStructuredDataFromTable(parsedTable, currentAirport);
@@ -217,31 +235,43 @@ function parseTableAST(tblNode, relMap, airportIcao) {
 
   for (let rIdx = 0; rIdx < rowElements.length; rIdx++) {
     const rowEl = rowElements[rIdx];
+
+    // Skip deleted rows in Track Changes (<w:trPr><w:del/>)
+    if (isRowDeleted(rowEl)) {
+      continue;
+    }
+
     const cellElements = getElementsByLocalName(rowEl, 'tc');
     const rowCells = [];
     let logicalCol = 0;
+    let rowChars = 0;
+    let rowImagesCount = 0;
 
     for (let cIdx = 0; cIdx < cellElements.length; cIdx++) {
       const tcEl = cellElements[cIdx];
       const text = extractCellText(tcEl);
+      rowChars += text.length;
       totalNonEmptyChars += text.length;
 
       const props = getCellProperties(tcEl);
 
-      // Resolve images with relMap
+      // Resolve images with relMap (deduplicating against tableImages)
       const cellImages = [];
       if (props.images && props.images.length > 0) {
         for (const img of props.images) {
           const mediaPath = relMap[img.rId] || '';
-          const resolvedImg = {
-            rId: img.rId,
-            mediaPath: mediaPath,
-            airportIcao: airportIcao,
-            filename: mediaPath.split('/').pop() || `diagram_${img.rId}.png`,
-            label: `Sơ đồ ${airportIcao} (#${tableImages.length + cellImages.length + 1})`
-          };
-          cellImages.push(resolvedImg);
-          tableImages.push(resolvedImg);
+          if (!tableImages.some(existing => existing.rId === img.rId || (mediaPath && existing.mediaPath === mediaPath))) {
+            const resolvedImg = {
+              rId: img.rId,
+              mediaPath: mediaPath,
+              airportIcao: airportIcao,
+              filename: mediaPath.split('/').pop() || `diagram_${img.rId}.png`,
+              label: `Sơ đồ ${airportIcao} (${mediaPath.split('/').pop() || img.rId})`
+            };
+            cellImages.push(resolvedImg);
+            tableImages.push(resolvedImg);
+            rowImagesCount++;
+          }
         }
       }
 
@@ -273,6 +303,11 @@ function parseTableAST(tblNode, relMap, airportIcao) {
       logicalCol += props.colspan;
     }
 
+    // Skip empty ghost rows at the end of table
+    if (rowChars === 0 && rowImagesCount === 0 && rowCells.every(c => !c.bgColor || c.bgColor.toLowerCase() === 'auto' || c.bgColor.toLowerCase() === 'none')) {
+      continue;
+    }
+
     rows.push({
       rowIndex: rIdx,
       cells: rowCells
@@ -282,7 +317,7 @@ function parseTableAST(tblNode, relMap, airportIcao) {
   return {
     rows,
     images: tableImages,
-    isEmpty: totalNonEmptyChars === 0 && tableImages.length === 0
+    isEmpty: (totalNonEmptyChars === 0 && tableImages.length === 0) || rows.length === 0
   };
 }
 
@@ -290,19 +325,21 @@ function parseTableAST(tblNode, relMap, airportIcao) {
  * Extracts normalized structured airport fields (Items 1-10) from parsed Table AST.
  */
 function extractStructuredDataFromTable(tableAst, airport) {
+  let prevRowWasFleetHeader = false;
+
   for (const row of tableAst.rows) {
     const cells = row.cells.filter(c => !c.isHiddenByRowspan);
     const cellTexts = cells.map(c => c.text.trim());
     const rowRaw = cellTexts.join(' ');
 
     // Item 1: AIRPORT CATEGORY: A/B/C
-    const mCat = rowRaw.match(/AIRPORT\s+CATEGOR[Y]?\s*[:]?\s*([A-C])/i);
+    const mCat = rowRaw.match(/AIRPORT\s+CATEGOR[Y]?\s*[:]?\s*([A-C])\b/i);
     if (mCat && !airport.category) {
       airport.category = mCat[1].toUpperCase();
     }
 
-    // Item 2: RFFS CATEGORY
-    const mRffs = rowRaw.match(/RFFS\s+CATEGORY\s*[:]?\s*(\d+)/i);
+    // Item 2: RFFS CATEGORY (handles standard, CAT 9 (O/ R), CAT 7, CAT8/ 9 O/ R 48H)
+    const mRffs = rowRaw.match(/RFFS\s+CATEGORY\s*[:]?\s*(?:CAT\s*)?(\d+)/i);
     if (mRffs && !airport.rffsCategory) {
       airport.rffsCategory = mRffs[1];
     }
@@ -346,15 +383,37 @@ function extractStructuredDataFromTable(tableAst, airport) {
       else if (lbl.includes('parking') && !airport.parking) airport.parking = cellTexts[1];
     }
 
+    // Check if this row is the Fleet Header row (ATR | A320 | A321 | A350 | B787)
+    if (cellTexts.length >= 5 && cellTexts[0].toUpperCase() === 'ATR' && cellTexts[1].toUpperCase() === 'A320') {
+      prevRowWasFleetHeader = true;
+      continue;
+    }
+
     // Item 3: Fleet Classification Table (ATR | A320 | A321 | A350 | B787)
-    if (cellTexts.length >= 5 && cellTexts.slice(0, 5).every(c => ['ADQ', 'ADEQ', 'NR', 'NO', 'NIL', 'YES', '-'].includes(c.toUpperCase()))) {
+    // Supports ADQ, ADEQ, typo AQD (normalized to ADQ), N/A, N/ A (normalized to N/A), NR, NO, NIL, YES, -
+    const normalizeCls = (token) => {
+      if (!token) return '-';
+      const u = token.trim().toUpperCase();
+      if (u === 'AQD') return 'ADQ';
+      if (u === 'N/ A' || u === 'N/A' || u === 'NA') return 'N/A';
+      return u;
+    };
+
+    const validClsTokens = ['ADQ', 'ADEQ', 'AQD', 'NR', 'NO', 'NIL', 'YES', '-', 'N/A', 'N/ A'];
+    const isClsRow = (cellTexts.length >= 5 && cellTexts.slice(0, 5).every(c => validClsTokens.includes(c.toUpperCase()))) ||
+                     (prevRowWasFleetHeader && cellTexts.length >= 5);
+
+    if (isClsRow && (!airport.classification || Object.keys(airport.classification).length === 0)) {
       airport.classification = {
-        ATR: cellTexts[0].toUpperCase(),
-        A320: cellTexts[1].toUpperCase(),
-        A321: cellTexts[2].toUpperCase(),
-        A350: cellTexts[3].toUpperCase(),
-        B787: cellTexts[4].toUpperCase()
+        ATR: normalizeCls(cellTexts[0]),
+        A320: normalizeCls(cellTexts[1]),
+        A321: normalizeCls(cellTexts[2]),
+        A350: normalizeCls(cellTexts[3]),
+        B787: normalizeCls(cellTexts[4])
       };
+      prevRowWasFleetHeader = false;
+    } else {
+      prevRowWasFleetHeader = false;
     }
 
     // Item 5: Runway Rows (e.g. 07R/25L or 28R or 10)
@@ -382,21 +441,27 @@ function extractStructuredDataFromTable(tableAst, airport) {
 function finalizeAirport(airport) {
   if (!airport.category) airport.category = 'A';
   if (!airport.rffsCategory) airport.rffsCategory = '8';
-  if (Object.keys(airport.classification).length === 0) {
+  if (!airport.classification || Object.keys(airport.classification).length === 0) {
     airport.classification = { ATR: 'ADQ', A320: 'ADQ', A321: 'ADQ', A350: 'ADQ', B787: 'ADQ' };
   }
+  // Assign sequential diagram numbers across all unique images
+  airport.images.forEach((img, idx) => {
+    img.diagramNumber = idx + 1;
+    img.label = `Sơ đồ #${idx + 1} (${img.filename || img.rId})`;
+  });
   airport.imagesCount = airport.images.length;
 }
 
 /**
- * Extracts blip and imagedata image references from any DOM node (paragraph or cell).
+ * Extracts blip and imagedata image references from any DOM node (paragraph or cell),
+ * skipping deleted elements and mc:Fallback by default.
  */
 function extractImagesFromNode(node, relMap, airportIcao) {
   const images = [];
-  const blips = getElementsByLocalName(node, 'blip');
+  const blips = getElementsByLocalName(node, 'blip', { skipDeleted: true });
   for (const blip of blips) {
     const rId = getAttrVal(blip, 'embed') || getAttrVal(blip, 'link');
-    if (rId && relMap[rId]) {
+    if (rId && relMap[rId] && !images.some(img => img.rId === rId)) {
       const mediaPath = relMap[rId];
       images.push({
         rId: rId,
@@ -408,7 +473,7 @@ function extractImagesFromNode(node, relMap, airportIcao) {
     }
   }
 
-  const vImgs = getElementsByLocalName(node, 'imagedata');
+  const vImgs = getElementsByLocalName(node, 'imagedata', { skipDeleted: true });
   for (const imgData of vImgs) {
     const rId = getAttrVal(imgData, 'id') || getAttrVal(imgData, 'href');
     if (rId && relMap[rId] && !images.some(img => img.rId === rId)) {

@@ -130,8 +130,9 @@ class VnaRouteManualApp {
 
     try {
       const cached = await getParsedDataset();
-      if (cached && cached.ch3 && cached.ch4 && cached.ch4.airports && cached.ch4.airports.length > 0) {
-        console.log(`[IndexedDB] Loaded cached dataset: ${cached.ch3.routes.length} routes, ${cached.ch4.airports.length} airports.`);
+      // If cached dataset is already v4.1, use it directly
+      if (cached && cached.version === '4.1' && cached.ch3 && cached.ch4 && cached.ch4.airports && cached.ch4.airports.length > 0) {
+        console.log(`[IndexedDB] Loaded cached dataset v4.1: ${cached.ch3.routes.length} routes, ${cached.ch4.airports.length} airports.`);
         this.applyDataset(cached.ch3, cached.ch4);
 
         if (statusPill && statusText) {
@@ -140,8 +141,40 @@ class VnaRouteManualApp {
         }
         return;
       }
+
+      // If cache is an older version (e.g. 3.0 or unversioned), auto-upgrade using raw docx files if available!
+      const rawCh4 = await getRawDocxFile('CHAPTER 4_REV04.docx');
+      if (rawCh4 && typeof window.JSZip !== 'undefined') {
+        console.log('[IndexedDB] Auto-upgrading cached dataset from stored raw docx files to v4.1...');
+        const rawCh3 = await getRawDocxFile('CHAPTER 3_NEW_AMD.docx');
+
+        let parsedCh3 = null;
+        let parsedCh4 = null;
+
+        if (rawCh3) {
+          const z3 = await window.JSZip.loadAsync(rawCh3);
+          const xml3 = await z3.file('word/document.xml')?.async('string');
+          if (xml3) parsedCh3 = parseChapter3Xml(xml3);
+        }
+
+        const z4 = await window.JSZip.loadAsync(rawCh4);
+        const xml4 = await z4.file('word/document.xml')?.async('string');
+        const rels4 = await z4.file('word/_rels/document.xml.rels')?.async('string');
+        if (xml4) parsedCh4 = parseChapter4Xml(xml4, rels4 || '');
+
+        if (parsedCh4 && parsedCh4.airports && parsedCh4.airports.length > 0) {
+          const finalCh3 = parsedCh3 || cached?.ch3 || { routes: this.routes, airportRouteIndex: this.airportRouteIndex };
+          await saveParsedDataset(finalCh3, parsedCh4);
+          this.applyDataset(finalCh3, parsedCh4);
+          if (statusPill && statusText) {
+            statusPill.classList.remove('needs-data');
+            statusText.innerText = `Đã nạp ${this.routes.length} chặng · ${this.airports.length} sân bay`;
+          }
+          return;
+        }
+      }
     } catch (e) {
-      console.warn('[IndexedDB] Could not read cache:', e);
+      console.warn('[IndexedDB] Could not read cache or auto-upgrade:', e);
     }
 
     // Fallback to default seed data
@@ -191,8 +224,8 @@ class VnaRouteManualApp {
       this.airportMap.set(a.icao.toUpperCase(), a);
     }
 
-    // Cross reference index
-    this.airportRouteIndex = ch3Data.airportRouteIndex || this.computeRouteIndex(this.routes);
+    // Always recompute or ensure cross reference index
+    this.airportRouteIndex = this.computeRouteIndex(this.routes);
 
     // Update Components
     this.hoverCard.updateAirportMap(this.airportMap);
@@ -205,6 +238,11 @@ class VnaRouteManualApp {
     const aptsBadge = document.getElementById('tabAirportsCount');
     if (routesBadge) routesBadge.innerText = this.routes.length;
     if (aptsBadge) aptsBadge.innerText = this.airports.length;
+
+    const subtitle = document.getElementById('appHeaderSubtitle');
+    if (subtitle) {
+      subtitle.innerText = `Chương 3 NEW AMD · Chương 4 REV04 (${this.routes.length} Chặng · ${this.airports.length} Sân bay)`;
+    }
   }
 
   computeRouteIndex(routes) {
@@ -419,7 +457,7 @@ class VnaRouteManualApp {
         </div>
 
         <div class="header-action-buttons">
-          <button type="button" class="btn btn-outline btn-sm" id="btnFavEntity" onclick="window.vnaApp.toggleFavorite('route', '${route.id}', '${escapeHtml(route.cityPair)}', '${escapeHtml(route.region)}')">
+          <button type="button" class="btn btn-outline btn-sm" id="btnFavEntity" onclick="window.vnaApp.toggleFavorite('route', '${route.id}')">
             <span style="color:${isFav ? 'var(--vna-gold-d1)' : 'inherit'};">${isFav ? '★' : '☆'}</span>
             <span>${isFav ? 'Đã lưu' : 'Yêu thích'}</span>
           </button>
@@ -506,7 +544,7 @@ class VnaRouteManualApp {
         </div>
 
         <div class="header-action-buttons">
-          <button type="button" class="btn btn-outline btn-sm" id="btnFavEntity" onclick="window.vnaApp.toggleFavorite('airport', '${airport.icao}', '${escapeHtml(airport.name)}', '${escapeHtml(airport.country)}')">
+          <button type="button" class="btn btn-outline btn-sm" id="btnFavEntity" onclick="window.vnaApp.toggleFavorite('airport', '${airport.icao}')">
             <span style="color:${isFav ? 'var(--vna-gold-d1)' : 'inherit'};">${isFav ? '★' : '☆'}</span>
             <span>${isFav ? 'Đã lưu' : 'Yêu thích'}</span>
           </button>
@@ -689,8 +727,25 @@ class VnaRouteManualApp {
     }
   }
 
-  toggleFavorite(type, id, label, subtitle) {
-    const isNowFav = UserPrefs.toggleFavorite(type, id, label, subtitle);
+  toggleFavorite(type, id, customLabel, customSubtitle) {
+    let label = customLabel;
+    let subtitle = customSubtitle;
+    if (!label) {
+      if (type === 'route') {
+        const r = this.routeMap.get(id);
+        if (r) {
+          label = r.cityPair;
+          subtitle = r.region;
+        }
+      } else if (type === 'airport') {
+        const a = this.airportMap.get(id.toUpperCase());
+        if (a) {
+          label = a.name;
+          subtitle = a.country;
+        }
+      }
+    }
+    const isNowFav = UserPrefs.toggleFavorite(type, id, label || id, subtitle || '');
     this.sidebarNav.renderList();
     this.sidebarNav.updateScopeCounts();
 

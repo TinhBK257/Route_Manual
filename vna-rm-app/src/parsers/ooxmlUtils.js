@@ -98,15 +98,25 @@ export function getChildByLocalName(parent, targetLocalName) {
 
 /**
  * Helper to find all descendants by localName ignoring namespace prefix.
+ * By default skips deleted elements (<w:del>, <w:moveFrom>) and VML fallback (<mc:Fallback>).
+ *
+ * @param {Element} parent
+ * @param {string} targetLocalName
+ * @param {{ skipDeleted?: boolean }} [options]
+ * @returns {Array<Element>}
  */
-export function getElementsByLocalName(parent, targetLocalName) {
+export function getElementsByLocalName(parent, targetLocalName, options = {}) {
   if (!parent) return [];
+  const skipDeleted = options.skipDeleted !== false;
   const results = [];
   const walk = (node) => {
     if (node.children) {
       for (let i = 0; i < node.children.length; i++) {
         const child = node.children[i];
         const local = child.localName || child.nodeName.replace(/^[a-zA-Z0-9]+:/, '');
+        if (skipDeleted && (local === 'del' || local === 'delText' || local === 'moveFrom' || local === 'Fallback')) {
+          continue;
+        }
         if (local === targetLocalName) results.push(child);
         walk(child);
       }
@@ -114,6 +124,19 @@ export function getElementsByLocalName(parent, targetLocalName) {
   };
   walk(parent);
   return results;
+}
+
+/**
+ * Checks whether a table row element (<w:tr>) is marked as deleted in Track Changes.
+ *
+ * @param {Element} trNode
+ * @returns {boolean}
+ */
+export function isRowDeleted(trNode) {
+  if (!trNode) return false;
+  const trPr = getChildByLocalName(trNode, 'trPr');
+  if (trPr && getChildByLocalName(trPr, 'del')) return true;
+  return false;
 }
 
 /**
@@ -219,16 +242,16 @@ export function getCellProperties(tcNode) {
     }
   }
 
-  // Detect embedded images in drawing / blip / imagedata
-  const blipElements = getElementsByLocalName(tcNode, 'blip');
+  // Detect embedded images in drawing / blip / imagedata (skips <w:del> and <mc:Fallback> by default)
+  const blipElements = getElementsByLocalName(tcNode, 'blip', { skipDeleted: true });
   for (const blip of blipElements) {
     const rId = getAttrVal(blip, 'embed') || getAttrVal(blip, 'link');
-    if (rId) {
+    if (rId && !images.some(img => img.rId === rId)) {
       images.push({ rId });
     }
   }
 
-  const vImageDataElements = getElementsByLocalName(tcNode, 'imagedata');
+  const vImageDataElements = getElementsByLocalName(tcNode, 'imagedata', { skipDeleted: true });
   for (const imgData of vImageDataElements) {
     const rId = getAttrVal(imgData, 'id') || getAttrVal(imgData, 'href');
     if (rId && !images.some(img => img.rId === rId)) {

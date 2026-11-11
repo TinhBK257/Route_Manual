@@ -316,7 +316,7 @@ export class SidebarNav {
             <span class="card-title">${escapeHtml(r.number ? `${r.number}. ` : '')}${escapeHtml(r.cityPair)}</span>
             <div style="display:flex; align-items:center; gap:6px;">
               <span class="card-tag tag-region">${escapeHtml(r.region)}</span>
-              <button type="button" class="card-fav-btn ${isFav ? 'is-fav' : ''}" onclick="event.stopPropagation(); window.vnaApp.toggleFavorite('route', '${r.id}', '${escapeHtml(r.cityPair)}', '${escapeHtml(r.region)}')" title="${isFav ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}">
+              <button type="button" class="card-fav-btn ${isFav ? 'is-fav' : ''}" onclick="event.stopPropagation(); window.vnaApp.toggleFavorite('route', '${r.id}')" title="${isFav ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}">
                 ${isFav ? '★' : '☆'}
               </button>
             </div>
@@ -434,7 +434,7 @@ export class SidebarNav {
             <div style="display:flex; gap:5px; align-items:center;">
               ${hasImg ? `<span class="badge badge-soft-primary" title="Có ${imgCount} sơ đồ đính kèm">📎 ${imgCount}</span>` : ''}
               <span class="card-tag ${catClass}">CAT ${escapeHtml(a.category || 'A')}</span>
-              <button type="button" class="card-fav-btn ${isFav ? 'is-fav' : ''}" onclick="event.stopPropagation(); window.vnaApp.toggleFavorite('airport', '${a.icao}', '${escapeHtml(a.name)}', '${escapeHtml(a.country)}')" title="${isFav ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}">
+              <button type="button" class="card-fav-btn ${isFav ? 'is-fav' : ''}" onclick="event.stopPropagation(); window.vnaApp.toggleFavorite('airport', '${a.icao}')" title="${isFav ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}">
                 ${isFav ? '★' : '☆'}
               </button>
             </div>

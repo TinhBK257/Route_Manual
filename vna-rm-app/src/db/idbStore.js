@@ -63,7 +63,7 @@ export async function saveParsedDataset(ch3Data, ch4Data) {
 
     const record = {
       id: 'active_dataset',
-      version: '3.0',
+      version: '4.1',
       updatedAt: new Date().toISOString(),
       ch3: ch3Data,
       ch4: ch4Data

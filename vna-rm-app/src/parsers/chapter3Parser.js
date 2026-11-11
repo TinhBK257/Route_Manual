@@ -172,7 +172,7 @@ export function parseChapter3Xml(docXml) {
               }
 
               const alternates = altStr
-                ? altStr.split(/[,;\s]+/).map(s => s.trim().toUpperCase()).filter(s => isValidIcao(s))
+                ? altStr.split(/[,;.\s/]+/).map(s => s.trim().toUpperCase()).filter(s => isValidIcao(s))
                 : [];
 
               const legObj = {
@@ -217,7 +217,7 @@ export function parseChapter3Xml(docXml) {
                               metadata['Preferred Enroute alternate Airport'] ||
                               metadata['Preferred Enroute Alternate Airports'] || '';
             const enrouteAlternates = enrAltRaw
-              ? enrAltRaw.split(/[,;\s]+/).map(s => s.trim().toUpperCase()).filter(s => isValidIcao(s))
+              ? enrAltRaw.split(/[,;.\s/]+/).map(s => s.trim().toUpperCase()).filter(s => isValidIcao(s))
               : [];
 
             // Extract depressurization procedure (e.g. Europe routes)
